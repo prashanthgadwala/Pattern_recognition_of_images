@@ -9,7 +9,8 @@ class ImageGenerator:
     def __init__(self, file_path, label_path, batch_size, image_size, rotation=False, mirroring=False, shuffle=False):
         self.file_path = Path(file_path)
         self.image_files = list(self.file_path.glob('*.npy'))
-        self.labels = json.load(open(label_path))
+        with open(label_path) as file:
+            self.labels = json.load(file)
         self.batch_size = batch_size
         self.image_size = image_size
         self.rotation = rotation
@@ -18,12 +19,19 @@ class ImageGenerator:
         self.current_index = 0
         self.epoch = 0
 
+        if self.shuffle:
+            indices = np.arange(len(self.image_files))
+            np.random.shuffle(indices)
+            self.image_files = [self.image_files[i] for i in indices]
+
     def next(self):
         if self.current_index + self.batch_size > len(self.image_files):
-            self.current_index = 0
+            self.current_index -= len(self.image_files)
             self.epoch += 1
             if self.shuffle:
-                np.random.shuffle(self.image_files)
+                indices = np.arange(len(self.image_files))
+                np.random.shuffle(indices)
+                self.image_files = [self.image_files[i] for i in indices]
 
         batch_indices = range(self.current_index, min(self.current_index + self.batch_size, len(self.image_files)))
         self.current_index += self.batch_size
@@ -82,14 +90,14 @@ class ImageGenerator:
         plt.savefig('batch_images.png')  # Save the figure before showing it
         plt.show()
 
-# Define paths and parameters
-file_path = "/Users/prashanthgadwala/Documents/Study material/Semester2/Deep learning/Exercise/exercise0_material/src_to_implement/exercise_data/"
-label_path = "/Users/prashanthgadwala/Documents/Study material/Semester2/Deep learning/Exercise/exercise0_material/src_to_implement/Labels.json"
-batch_size = 6
-image_size = (36, 36)  # Specify the desired image size
-
-# Create an instance of ImageGenerator
-generator = ImageGenerator(file_path, label_path, batch_size, image_size, rotation=True, mirroring=True)
-
-# Call the show() method to display images
-generator.show()
+# # Define paths and parameters
+# file_path = "/Users/prashanthgadwala/Documents/Study material/Semester2/Deep learning/Exercise/exercise0_material/src_to_implement/exercise_data/"
+# label_path = "/Users/prashanthgadwala/Documents/Study material/Semester2/Deep learning/Exercise/exercise0_material/src_to_implement/Labels.json"
+# batch_size = 6
+# image_size = (36, 36)  # Specify the desired image size
+# 
+# # Create an instance of ImageGenerator
+# generator = ImageGenerator(file_path, label_path, batch_size, image_size, rotation=True, mirroring=True)
+# 
+# # Call the show() method to display images
+# generator.show()
